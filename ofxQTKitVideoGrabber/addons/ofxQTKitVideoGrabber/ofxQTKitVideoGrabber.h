@@ -4,6 +4,10 @@
  * Copyright 2010 (c) James George, http://www.jamesgeorge.org
  * in collaboration with FlightPhase http://www.flightphase.com
  *
+ * Video & Audio sync'd recording + named device id's 
+ * added by gameover [matt gingold] (c) 2011 http://gingold.com.au
+ * with the support of hydra poesis http://hydrapoesis.net
+ *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
  * files (the "Software"), to deal in the Software without
@@ -56,21 +60,44 @@ class ofxQTKitVideoGrabber : public ofBaseVideo
 	ofxQTKitVideoGrabber();
 	~ofxQTKitVideoGrabber();
    
-	void			initGrabber(int w, int h);
+	void			initGrabber(int w, int h, bool buseAudio = false);
 	void			grabFrame();
 	bool			isFrameNew();
 	void			update();
 	void 			setUseTexture(bool bUse);
 	
 	void 			listDevices();
+	void			listAudioDevices();
+	void			listVideoDevices();
 	void			close();
 	unsigned char 	* getPixels();
 	ofTexture &		getTextureReference();
 	void 			setVerbose(bool bTalkToMe);
-	void			setDeviceID(int deviceID);
+	void			setDeviceID(int videoDeviceID);
+	void			setDeviceID(string videoDeviceIDString);
 	int				getDeviceID();
+	void			setVideoDeviceID(int videoDeviceID);
+	void			setVideoDeviceID(string videoDeviceIDString);
+	int				getVideoDeviceID();
+	void			setAudioDeviceID(int audioDeviceID);
+	void			setAudioDeviceID(string audioDeviceIDString);
+	int				getAudioDeviceID();
 	void			setDesiredFrameRate(int framerate){ ofLog(OF_LOG_WARNING, "ofxQTKitVideoGrabber -- Cannot specify framerate.");  };
+
 	void			videoSettings();
+	void			audioSettings();
+	
+	// [added by gameover]
+	void			initRecording();
+	void			initGrabber(bool bUseAudio = true);	// used to init with no preview/textures etc
+	void			listVideoCodecs();
+	void			listAudioCodecs();
+	void			setVideoCodec(string videoCodecIDString);
+	void			setAudioCodec(string audioCodecIDString);
+	void			startRecording(string filePath);
+	void			stopRecording();
+	bool			isRecording();
+	
 	void 			draw(float x, float y, float w, float h);
 	void 			draw(float x, float y);
 	
@@ -79,10 +106,17 @@ class ofxQTKitVideoGrabber : public ofBaseVideo
 	
   protected:
 
-	bool confirmInit();
-	int deviceID;
-	bool isInited;
-	bool bUseTexture;
+	bool	confirmInit();
+	int		videoDeviceID;
+	int		audioDeviceID;
+	int		videoDeviceIDString;
+	int		audioDeviceIDString;
+	string	videoCodecIDString;
+	string	audioCodecIDString;
+	bool	useAudio;
+	bool	isInited;
+	bool	bUseTexture;
+	
 	#ifdef __OBJC__
 	QTKitVideoGrabber* grabber; //only obj-c needs to know the type of this protected var
 	#else

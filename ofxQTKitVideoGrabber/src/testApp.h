@@ -10,13 +10,18 @@
  *  In collaboration with FlightPhase ( http://www.flightphase.com )
  *
  *  Copyright (c) 2010 
+ *
+ * Video & Audio sync'd recording + named device id's 
+ * added by gameover [matt gingold] (c) 2011 http://gingold.com.au
+ * with the support of hydra poesis http://hydrapoesis.net
+ *
  */
 
 #include "ofMain.h"
 #include "ofxQTKitVideoGrabber.h"
 
-#define CAM_WIDTH 320
-#define CAM_HEIGHT 240
+#define CAM_WIDTH 640
+#define CAM_HEIGHT 480
 
 class testApp : public ofBaseApp{
 	
