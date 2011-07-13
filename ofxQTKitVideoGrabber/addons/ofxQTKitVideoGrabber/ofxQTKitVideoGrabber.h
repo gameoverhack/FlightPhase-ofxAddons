@@ -66,9 +66,9 @@ class ofxQTKitVideoGrabber : public ofBaseVideo
 	void			update();
 	void 			setUseTexture(bool bUse);
 	
-	void 			listDevices();
-	void			listAudioDevices();
-	void			listVideoDevices();
+	vector<string>*	listDevices();
+	vector<string>*	listAudioDevices();
+	vector<string>*	listVideoDevices();
 	void			close();
 	unsigned char 	* getPixels();
 	ofTexture &		getTextureReference();
@@ -106,6 +106,9 @@ class ofxQTKitVideoGrabber : public ofBaseVideo
 	
   protected:
 
+	vector<string>*	videoDeviceVec;
+	vector<string>*	audioDeviceVec;
+	
 	bool	confirmInit();
 	int		videoDeviceID;
 	int		audioDeviceID;

@@ -99,8 +99,8 @@ static inline void argb_to_rgb(unsigned char* src, unsigned char* dst, int numPi
 @property(nonatomic, readwrite) BOOL useTexture;
 @property(nonatomic, readwrite) BOOL useAudio;
 
-+ (void) listDevices;
-+ (void) listAudioDevices;
++ (NSArray*) listDevices;
++ (NSArray*) listAudioDevices;
 
 - (id) initWithWidth:(NSInteger)width 
 			  height:(NSInteger)height 
@@ -132,8 +132,7 @@ static inline void argb_to_rgb(unsigned char* src, unsigned char* dst, int numPi
 - (void) stopRecording;
 
 + (void) enumerateArray:(NSArray*)someArray;
-+ (int) getIndexofStringInArray:(NSArray*)someArray stringToFind:(NSString*)someStringDescription;
-
++ (int)	 getIndexofStringInArray:(NSArray*)someArray stringToFind:(NSString*)someStringDescription;
 - (void) videoSettings;
 - (void) audioSettings;
 
@@ -190,18 +189,27 @@ static inline void argb_to_rgb(unsigned char* src, unsigned char* dst, int numPi
 	return index;
 }
 
-+ (void) listDevices
++ (NSArray*) listDevices
 {
+	NSArray* videoDevices = [[QTCaptureDevice inputDevicesWithMediaType:QTMediaTypeVideo] 
+							 arrayByAddingObjectsFromArray:[QTCaptureDevice inputDevicesWithMediaType:QTMediaTypeMuxed]];
+	
 	NSLog(@"ofxQTKitVideoGrabber listing video devices");
-	[self enumerateArray:[[QTCaptureDevice inputDevicesWithMediaType:QTMediaTypeVideo] 
-						  arrayByAddingObjectsFromArray:[QTCaptureDevice inputDevicesWithMediaType:QTMediaTypeMuxed]]];
+	[self enumerateArray:videoDevices];
+	
+	return videoDevices;
+	
 }
 
 // [added by gameover]
-+ (void) listAudioDevices
++ (NSArray*) listAudioDevices
 {
+	NSArray* audioDevices = [QTCaptureDevice inputDevicesWithMediaType:QTMediaTypeSound];
+	
 	NSLog(@"ofxQTKitVideoGrabber listing audio devices");
-	[self enumerateArray:[QTCaptureDevice inputDevicesWithMediaType:QTMediaTypeSound]];
+	[self enumerateArray:audioDevices];
+	
+	return audioDevices;
 }
 
 - (id) initWithWidth:(NSInteger)_width height:(NSInteger)_height videodevice:(NSInteger)_videoDeviceID audiodevice:(NSInteger)_audioDeviceID usingTexture:(BOOL)_useTexture usingAudio:(BOOL)_useAudio
@@ -714,6 +722,8 @@ ofxQTKitVideoGrabber::ofxQTKitVideoGrabber()
 	audioDeviceID = 0;
 	videoCodecIDString = "QTCompressionOptionsJPEGVideo";					// setting default video codec
 	audioCodecIDString = "QTCompressionOptionsHighQualityAACAudio";			// setting audio video codec
+	videoDeviceVec = new vector<string>;
+	audioDeviceVec = new vector<string>;
 	grabber = NULL;
 	isInited = false;
 	bUseTexture = true;
@@ -909,28 +919,43 @@ bool ofxQTKitVideoGrabber::isRecording()
 	return isInited && [grabber isRecording];
 }
 
-void ofxQTKitVideoGrabber::listDevices()
+vector<string>* ofxQTKitVideoGrabber::listDevices()
 {
 
 	NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];		// was leaking before [added by gameover]
-	[QTKitVideoGrabber listDevices];	
+	NSArray* videoDevices = [QTKitVideoGrabber listDevices];
+	videoDeviceVec->clear();
+	for (id object in videoDevices) 
+	{
+		string str = [[object description] cStringUsingEncoding: NSASCIIStringEncoding];
+		videoDeviceVec->push_back(str);
+	}
 	[pool release];
+	return videoDeviceVec;
 
 }
 
 // [added by gameover]
-void ofxQTKitVideoGrabber::listVideoDevices()
+vector<string>* ofxQTKitVideoGrabber::listVideoDevices()
 {
-	listDevices();	
+	return listDevices();	
 }
 
 // [added by gameover]
-void ofxQTKitVideoGrabber::listAudioDevices()
+vector<string>* ofxQTKitVideoGrabber::listAudioDevices()
 {
 
 	NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];		// was leaking before [added by gameover]
-	[QTKitVideoGrabber listAudioDevices];	
+	NSArray* audioDevices = [QTKitVideoGrabber listAudioDevices];
+	audioDeviceVec->clear();
+	for (id object in audioDevices) 
+	{
+		string str = [[object description] cStringUsingEncoding: NSASCIIStringEncoding];
+		audioDeviceVec->push_back(str);
+	}
+	
 	[pool release];
+	return audioDeviceVec;
 
 }
 
