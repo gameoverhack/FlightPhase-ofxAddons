@@ -43,7 +43,6 @@
  */
 
 #include "ofxQTKitVideoGrabber.h"
-#import <Cocoa/Cocoa.h>
 #import <QTKit/QTKit.h>
 #import <QuickTime/QuickTime.h>
 
@@ -124,8 +123,8 @@ static inline void argb_to_rgb(unsigned char* src, unsigned char* dst, int numPi
 - (void) setAudioDeviceID:(NSInteger)_audioDeviceID;
 
 - (void) initRecording:(NSString*)_selectedVideoCodec audioCodec:(NSString*)_selectedAudioCodec;
-+ (void) listVideoCodecs;
-+ (void) listAudioCodecs;
++ (NSArray*) listVideoCodecs;
++ (NSArray*) listAudioCodecs;
 - (void) setVideoCodec:(NSString*)_selectedVideoCodec;
 - (void) setAudioCodec:(NSString*)_selectedAudioCodec;
 - (void) startRecording:(NSString*)filePath;
@@ -464,16 +463,26 @@ static inline void argb_to_rgb(unsigned char* src, unsigned char* dst, int numPi
 	}
 }
 
-+ (void) listVideoCodecs
++ (NSArray*) listVideoCodecs
 {
+	
+	NSArray* videoCodecs = [QTCompressionOptions compressionOptionsIdentifiersForMediaType:QTMediaTypeVideo];
+	
 	NSLog(@"ofxQTKitVideoGrabber listing video compression options"); 
-	[self enumerateArray:[QTCompressionOptions compressionOptionsIdentifiersForMediaType:QTMediaTypeVideo]];
+	[self enumerateArray:videoCodecs];
+	
+	return videoCodecs;
 }
 
-+ (void) listAudioCodecs
++ (NSArray*) listAudioCodecs
 {
+	
+	NSArray* audioCodecs = [QTCompressionOptions compressionOptionsIdentifiersForMediaType:QTMediaTypeSound];
+	
 	NSLog(@"ofxQTKitVideoGrabber listing audio compression options"); 
-	[self enumerateArray:[QTCompressionOptions compressionOptionsIdentifiersForMediaType:QTMediaTypeSound]];
+	[self enumerateArray:audioCodecs];
+	
+	return audioCodecs;
 }
 
 - (void) setVideoCodec:(NSString*)_selectedVideoCodec
@@ -696,11 +705,12 @@ static inline void argb_to_rgb(unsigned char* src, unsigned char* dst, int numPi
 		[videoDeviceInput release];													// [added by gameover]
 		[audioDeviceInput release];													// [added by gameover]
 		[captureMovieFileOutput release];											// [added by gameover]
-		[super dealloc];
+		//[super dealloc];															// [removed by gameover -> possible mem 
+																					// leak but otherwise we crash on closing??]
 	}	
 	
 	self.session = nil;
-	
+
 	free(pixels);
 	if(texture != NULL){
 		delete texture;
@@ -724,6 +734,8 @@ ofxQTKitVideoGrabber::ofxQTKitVideoGrabber()
 	audioCodecIDString = "QTCompressionOptionsHighQualityAACAudio";			// setting audio video codec
 	videoDeviceVec = new vector<string>;
 	audioDeviceVec = new vector<string>;
+	videoCodecsVec = new vector<string>;
+	audioCodecsVec = new vector<string>;
 	grabber = NULL;
 	isInited = false;
 	bUseTexture = true;
@@ -844,19 +856,35 @@ void ofxQTKitVideoGrabber::initRecording()
 }
 
 // [added by gameover]
-void ofxQTKitVideoGrabber::listVideoCodecs() 
+vector<string>* ofxQTKitVideoGrabber::listVideoCodecs() 
 {
 	NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
-	[QTKitVideoGrabber listVideoCodecs];
+	NSArray* videoCodecs = [QTKitVideoGrabber listVideoCodecs];
+	videoCodecsVec->clear();
+	for (id object in videoCodecs) 
+	{
+		string str = [[object description] cStringUsingEncoding: NSASCIIStringEncoding];
+		videoCodecsVec->push_back(str);
+	}
 	[pool release];	
+	
+	return videoCodecsVec;
 }
 
 // [added by gameover]
-void ofxQTKitVideoGrabber::listAudioCodecs() 
+vector<string>* ofxQTKitVideoGrabber::listAudioCodecs() 
 {
 	NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
-	[QTKitVideoGrabber listAudioCodecs];
+	NSArray* audioCodecs = [QTKitVideoGrabber listAudioCodecs];
+	audioCodecsVec->clear();
+	for (id object in audioCodecs) 
+	{
+		string str = [[object description] cStringUsingEncoding: NSASCIIStringEncoding];
+		audioCodecsVec->push_back(str);
+	}
 	[pool release];	
+	
+	return audioCodecsVec;
 }
 
 // [added by gameover]
@@ -909,14 +937,19 @@ void ofxQTKitVideoGrabber::grabFrame()
 	}
 }
 
+bool ofxQTKitVideoGrabber::isReady()
+{
+	return isInited;
+}
+
 bool ofxQTKitVideoGrabber::isFrameNew()
 {
-	return isInited && [grabber isFrameNew];
+	return isReady() && [grabber isFrameNew];
 }
 
 bool ofxQTKitVideoGrabber::isRecording()
 {
-	return isInited && [grabber isRecording];
+	return isReady() && [grabber isRecording];
 }
 
 vector<string>* ofxQTKitVideoGrabber::listDevices()
@@ -953,7 +986,6 @@ vector<string>* ofxQTKitVideoGrabber::listAudioDevices()
 		string str = [[object description] cStringUsingEncoding: NSASCIIStringEncoding];
 		audioDeviceVec->push_back(str);
 	}
-	
 	[pool release];
 	return audioDeviceVec;
 

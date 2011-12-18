@@ -59,7 +59,11 @@ class ofxQTKitVideoGrabber : public ofBaseVideo
   public:
 	ofxQTKitVideoGrabber();
 	~ofxQTKitVideoGrabber();
-   
+
+#if OF_VERSION == 7
+	ofPixelsRef		getPixelsRef(){ofPixels p; return p;}; //TODO: make this work
+#endif
+	
 	void			initGrabber(int w, int h, bool buseAudio = false);
 	void			grabFrame();
 	bool			isFrameNew();
@@ -90,13 +94,14 @@ class ofxQTKitVideoGrabber : public ofBaseVideo
 	// [added by gameover]
 	void			initRecording();
 	void			initGrabber(bool bUseAudio = true);	// used to init with no preview/textures etc
-	void			listVideoCodecs();
-	void			listAudioCodecs();
+	vector<string>*	listVideoCodecs();
+	vector<string>*	listAudioCodecs();
 	void			setVideoCodec(string videoCodecIDString);
 	void			setAudioCodec(string audioCodecIDString);
 	void			startRecording(string filePath);
 	void			stopRecording();
 	bool			isRecording();
+	bool			isReady();
 	
 	void 			draw(float x, float y, float w, float h);
 	void 			draw(float x, float y);
@@ -108,6 +113,9 @@ class ofxQTKitVideoGrabber : public ofBaseVideo
 
 	vector<string>*	videoDeviceVec;
 	vector<string>*	audioDeviceVec;
+	
+	vector<string>*	videoCodecsVec;
+	vector<string>*	audioCodecsVec;
 	
 	bool	confirmInit();
 	int		videoDeviceID;
